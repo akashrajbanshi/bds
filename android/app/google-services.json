@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1006032710336",
+    "firebase_url": "https://breaking-daylight-studio.firebaseio.com",
+    "project_id": "breaking-daylight-studio",
+    "storage_bucket": "breaking-daylight-studio.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006032710336:android:bcd226bb6e40f390c75b25",
+        "android_client_info": {
+          "package_name": "com.bdr.bds"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1006032710336-1dnjt9rqgv3oh4mb0u92971vsadett0g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXjkqGXHZ8U6uySEJHwrsHcx2XYM1apyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1006032710336-1dnjt9rqgv3oh4mb0u92971vsadett0g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
