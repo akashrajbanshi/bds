@@ -4,12 +4,12 @@ import 'package:bds/pages/messagepage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class HomePage extends StatefulWidget {
+class NavigationPage extends StatefulWidget {
   @override
-  createState() => _HomePageState();
+  createState() => _NavigationPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _NavigationPageState extends State<NavigationPage> {
   int _currentIndex = 0;
 
   final List<Widget> screens = [CalendarPage(), MessagePage()];
@@ -17,6 +17,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Text(Strings.appTitle),
       ),
