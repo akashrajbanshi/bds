@@ -1,3 +1,4 @@
+import 'package:bds/common/strings.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class Appointment {
@@ -18,15 +19,15 @@ class Appointment {
 
   Appointment.map(dynamic obj) {
     this._id = obj['id'];
-    this._startTime = obj['startTime'];
-    this._endTime = obj['endTime'];
-    this._appointmentDay = obj['appointmentDay'];
+    this._startTime = obj[Strings.FIELD_START_TIME];
+    this._endTime = obj[Strings.FIELD_END_TIME];
+    this._appointmentDay = obj[Strings.FIELD_APPOINTMENT_DAY];
   }
 
   Appointment.fromSnapshot(DataSnapshot snapshot) {
     _id = snapshot.key;
-    _startTime = snapshot.value['startTime'];
-    _endTime = snapshot.value['endTime'];
-    _appointmentDay = snapshot.value['appointmentDay'];
+    _startTime = snapshot.value[Strings.FIELD_START_TIME];
+    _endTime = snapshot.value[Strings.FIELD_END_TIME];
+    _appointmentDay = snapshot.value[Strings.FIELD_APPOINTMENT_DAY];
   }
 }

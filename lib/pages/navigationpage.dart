@@ -19,7 +19,7 @@ class _NavigationPageState extends State<NavigationPage> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
-        title: Text(Strings.appTitle),
+        title: Text(Strings.APP_TITLE),
       ),
       body: IndexedStack(
         index: _currentIndex,
@@ -31,9 +31,9 @@ class _NavigationPageState extends State<NavigationPage> {
         items: [
           BottomNavigationBarItem(
               icon: Icon(Icons.calendar_today),
-              title: Text(Strings.appointment)),
+              title: Text(Strings.APPOINTMENT)),
           BottomNavigationBarItem(
-              icon: Icon(Icons.message), title: Text(Strings.message))
+              icon: Icon(Icons.message), title: Text(Strings.MESSAGE))
         ],
       ),
     );
