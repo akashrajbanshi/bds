@@ -1,4 +1,6 @@
 import 'package:bds/common/strings.dart';
+import 'package:bds/model/appointment.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -19,11 +21,18 @@ class _CalendarPageState extends State<CalendarPage> {
   TimeOfDay _selectedStartTime = TimeOfDay.now();
   TimeOfDay _selectedEndTime = TimeOfDay.now();
 
+
   String _formatTimeOfDay(TimeOfDay tod) {
     final now = new DateTime.now();
     final dt = DateTime(now.year, now.month, now.day, tod.hour, tod.minute);
     final format = DateFormat.jm();
     return format.format(dt);
+  }
+
+  DateFormat _convertStringToTimeOfDay(String time) {
+    var timeOfDay = TimeOfDay(hour: int.parse(time.split(":")[0]),
+        minute: int.parse(time.split(":")[1]));
+    return new DateFormat.Hm(timeOfDay);
   }
 
   Future<void> _selectStartTime(BuildContext context) async {
@@ -46,6 +55,7 @@ class _CalendarPageState extends State<CalendarPage> {
     if (picked != null && picked != _selectedEndTime)
       setState(() {
         _selectedEndTime = picked;
+
         _endTimeController.text = _formatTimeOfDay(picked);
       });
   }
@@ -106,9 +116,10 @@ class _CalendarPageState extends State<CalendarPage> {
                           },
                           validator: (value) {
                             if (value.isEmpty) {
-                              return 'Please enter some text';
+                              return Strings.validateEmptyStartTime;
                             }
-                            return null;
+                            return
+                              null;
                           },
                         ),
                       ),
@@ -124,7 +135,7 @@ class _CalendarPageState extends State<CalendarPage> {
                           },
                           validator: (value) {
                             if (value.isEmpty) {
-                              return 'Please enter some text';
+                              return Strings.validateEmptyEndTime;
                             }
                             return null;
                           },
@@ -134,7 +145,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: RaisedButton(
                           onPressed: () {
-
+                            validateAndSave(day);
                           },
                           child: Text('Submit'),
                         ),
@@ -151,5 +162,40 @@ class _CalendarPageState extends State<CalendarPage> {
         barrierLabel: '',
         context: context,
         pageBuilder: (context, animation1, animation2) {});
+  }
+
+  void createRecord(DatabaseReference databaseReference,
+      Appointment appointment) {
+    databaseReference.push().set({
+      'startTime': appointment.startTime,
+      'endTime': appointment.endTime,
+      'appointmentDate': appointment.appointmentDay,
+    }).then((_) {
+      Navigator.pop(context);
+      setState(() {
+        _startTimeController.text = '';
+        _endTimeController.text = '';
+      });
+      Scaffold.of(context).showSnackBar(new SnackBar(
+        content: DefaultTextStyle(
+          child: Text(Strings.appointmentSaveToastMsg),
+          style: TextStyle(color: Colors.black54),
+        ),
+        behavior: SnackBarBehavior.floating,
+        elevation: 2.0,
+        backgroundColor: Colors.white,
+      ));
+    });
+  }
+
+  void validateAndSave(DateTime day) {
+    final form = _formKey.currentState;
+    if (form.validate()) {
+      final databaseReference =
+      FirebaseDatabase.instance.reference().child('appointment');
+      Appointment appointment = Appointment(null, _startTimeController.text,
+          _endTimeController.text, day.toString());
+      createRecord(databaseReference, appointment);
+    }
   }
 }
