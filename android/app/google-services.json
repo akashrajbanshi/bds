@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1006032710336-aprhs4sshq0l413c1g5sve8jaf0b7a1d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bdr.bds",
+            "certificate_hash": "217d3b83cdf7d4d6aaa855e50b08976794caf659"
+          }
+        },
+        {
           "client_id": "1006032710336-1dnjt9rqgv3oh4mb0u92971vsadett0g.apps.googleusercontent.com",
           "client_type": 3
         }

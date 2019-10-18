@@ -1,3 +1,4 @@
+import 'package:bds/pages/authenticationpage.dart';
 import 'package:bds/pages/navigationpage.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,7 @@ class BDS extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BDS',
-      home: NavigationPage(),
+      home: AuthenticationPage(),
     );
   }
 }
