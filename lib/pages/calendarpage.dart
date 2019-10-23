@@ -69,6 +69,8 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void dispose() {
     _calendarController.dispose();
+    _startTimeController.dispose();
+    _endTimeController.dispose();
     _onNoteAddedSubscription.cancel();
     super.dispose();
   }
