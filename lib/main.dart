@@ -1,15 +1,21 @@
 import 'package:bds/pages/authenticationpage.dart';
-import 'package:bds/pages/navigationpage.dart';
+import 'package:bds/pages/homepage.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(BDS());
-
-class BDS extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BDS',
-      home: AuthenticationPage(),
-    );
-  }
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var userId = prefs.getString('userID');
+  print(userId);
+  runApp(MaterialApp(
+    title: 'BDS',
+    initialRoute: '/',
+    routes: {
+      '/': (context) => (null != userId) ? HomePage() : AuthenticationPage(),
+      // Login Page
+      '/home': (context) => HomePage(),
+      // Home Page
+    },
+  ));
 }

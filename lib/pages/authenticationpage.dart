@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:bds/common/customcolors.dart';
 import 'package:bds/common/customicon.dart';
 import 'package:bds/common/socialicon.dart';
 import 'package:bds/common/styles.dart';
@@ -10,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthenticationPage extends StatefulWidget {
   @override
@@ -29,7 +31,6 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   @override
   void initState() {
     super.initState();
-
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
   }
@@ -46,9 +47,26 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
         .createUserWithEmailAndPassword(email: email, password: password)
         .catchError((e) {
       scaffoldKey.currentState.showSnackBar(new SnackBar(
+        action: SnackBarAction(
+          label: 'Close',
+          onPressed: () {
+            scaffoldKey.currentState.hideCurrentSnackBar();
+          },
+        ),
         content: DefaultTextStyle(
-          child: Text(e.message.toString()),
-          style: TextStyle(color: Colors.black54),
+          child: Row(
+            children: <Widget>[
+              Padding(
+                child: IconTheme(
+                  data: IconThemeData(color: Colors.deepOrange),
+                  child: Icon(Icons.error),
+                ),
+                padding: EdgeInsets.only(right: 4.0),
+              ),
+              Text(e.message.toString())
+            ],
+          ),
+          style: TextStyle(color: Colors.deepOrange),
         ),
         behavior: SnackBarBehavior.floating,
         elevation: 2.0,
@@ -60,6 +78,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   void signIn(String email, String password) async {
     AuthResult result = await _auth.signInWithEmailAndPassword(
         email: email, password: password);
+    if (null != result.user) {
+      Navigator.pushNamed(context, '/home');
+    }
   }
 
   void signInWithFacebook() async {
@@ -72,6 +93,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           FacebookAuthProvider.getCredential(accessToken: myToken.token);
 
       var user = await FirebaseAuth.instance.signInWithCredential(credential);
+      if (null != user) {
+        Navigator.pushNamed(context, '/home');
+      }
     }
   }
 
@@ -87,12 +111,17 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     );
     AuthResult authResult = await _auth.signInWithCredential(credential);
     FirebaseUser user = authResult.user;
+    if (null != user) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('userID', user.uid);
+      Navigator.pushNamed(context, '/home');
+    }
   }
 
   Future<Null> signOut() async {
     // Sign out with firebase
     await _auth.signOut().then((_) {
-      //_googleSignIn.signOut();
+      _googleSignIn.signOut();
       _facebookSignIn.logOut();
     });
   }
@@ -103,8 +132,12 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       tag: 'hero',
       child: CircleAvatar(
         backgroundColor: Colors.transparent,
-        radius: 48.0,
-        child: Image.asset('assets/logo.png'),
+        radius: 70.0,
+        child: Image.asset(
+          'assets/logo.png',
+          color: CustomColors.appBarColor,
+          filterQuality: FilterQuality.high,
+        ),
       ),
     );
 
@@ -142,7 +175,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           signUpWithEmail(_emailController.text, _passwordController.text);
         },
         padding: EdgeInsets.all(10),
-        color: Colors.lightBlueAccent,
+        color: CustomColors.buttonColor,
         child: Row(
           children: <Widget>[
             SocialIcon(iconData: CustomIcons.email),
@@ -157,7 +190,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
 
     final emailAndPasswordForm = Column(
       children: <Widget>[
-        SizedBox(height: 48.0),
+        SizedBox(height: 28.0),
         email,
         SizedBox(height: 8.0),
         password,
@@ -202,7 +235,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           signInWithGoogle();
         },
         padding: EdgeInsets.all(10),
-        color: Colors.lightBlueAccent,
+        color: CustomColors.buttonColor,
         child: Row(
           children: <Widget>[
             SocialIcon(iconData: CustomIcons.google),
@@ -225,7 +258,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
           signInWithFacebook();
         },
         padding: EdgeInsets.all(10),
-        color: Colors.lightBlueAccent,
+        color: CustomColors.buttonColor,
         child: Row(
           children: <Widget>[
             SocialIcon(iconData: CustomIcons.facebook),

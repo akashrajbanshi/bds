@@ -6,8 +6,10 @@ class Appointment {
   String _startTime;
   String _endTime;
   String _appointmentDay;
+  String _userId;
 
-  Appointment(this._id, this._startTime, this._endTime, this._appointmentDay);
+  Appointment(this._id, this._startTime, this._endTime, this._appointmentDay,
+      this._userId);
 
   String get id => _id;
 
@@ -17,11 +19,14 @@ class Appointment {
 
   String get appointmentDay => _appointmentDay;
 
+  String get userId => _userId;
+
   Appointment.map(dynamic obj) {
     this._id = obj['id'];
     this._startTime = obj[Strings.FIELD_START_TIME];
     this._endTime = obj[Strings.FIELD_END_TIME];
     this._appointmentDay = obj[Strings.FIELD_APPOINTMENT_DAY];
+    this._userId = obj[Strings.FIELD_USER_ID];
   }
 
   Appointment.fromSnapshot(DataSnapshot snapshot) {
@@ -29,5 +34,6 @@ class Appointment {
     _startTime = snapshot.value[Strings.FIELD_START_TIME];
     _endTime = snapshot.value[Strings.FIELD_END_TIME];
     _appointmentDay = snapshot.value[Strings.FIELD_APPOINTMENT_DAY];
+    _userId = snapshot.value[Strings.FIELD_USER_ID];
   }
 }

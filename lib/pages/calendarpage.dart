@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bds/common/customcolors.dart';
 import 'package:bds/common/utility.dart';
 import 'package:bds/common/strings.dart';
 import 'package:bds/common/validation.dart';
@@ -7,6 +8,7 @@ import 'package:bds/model/appointment.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -34,7 +36,7 @@ class _CalendarPageState extends State<CalendarPage> {
       context: context,
       initialTime: _selectedStartTime,
     );
-    if (picked != null && picked != _selectedStartTime)
+    if (null != picked)
       setState(() {
         _selectedStartTime = picked;
         _startTimeController.text = Utility.formatTimeOfDay(picked);
@@ -46,10 +48,9 @@ class _CalendarPageState extends State<CalendarPage> {
       context: context,
       initialTime: _selectedEndTime,
     );
-    if (picked != null && picked != _selectedEndTime)
+    if (null != picked)
       setState(() {
         _selectedEndTime = picked;
-
         _endTimeController.text = Utility.formatTimeOfDay(picked);
       });
   }
@@ -83,18 +84,46 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return TableCalendar(
-        calendarController: _calendarController, onDaySelected: _selectDate);
+    return Card(
+      color: CustomColors.cardColor,
+      child: TableCalendar(
+          calendarController: _calendarController, onDaySelected: _selectDate),
+    );
   }
 
-  void _selectDate(DateTime day, List events) {
-    appointments.forEach((appointment) {
-      if (appointment.appointmentDay == day.toString()) {
-        events.add(appointment);
-      }
-    });
-    //showEventLists(events);
-    showAddAppointmentDialog(day);
+  void _selectDate(DateTime date, List events) {
+    var now = DateTime.now();
+    var todayDate = DateTime(now.year, now.month, now.day);
+    var selectedDay = DateTime(date.year, date.month, date.day);
+    if (selectedDay.isAfter(todayDate) || selectedDay == todayDate) {
+      appointments.forEach((appointment) {
+        if (appointment.appointmentDay == date.toString()) {
+          events.add(appointment);
+        }
+      });
+      //showEventLists(events);
+      showAddAppointmentDialog(date);
+    } else {
+      createSnackbar(Strings.DATE_NOTE_VALID_FOR_APPOINTMENT);
+    }
+  }
+
+  void createSnackbar(String message) {
+    Scaffold.of(context).showSnackBar(new SnackBar(
+      content: DefaultTextStyle(
+        child: Text(message),
+        style: TextStyle(color: Colors.black54),
+      ),
+      action: SnackBarAction(
+        label: 'Close',
+        onPressed: () {
+          Scaffold.of(context).hideCurrentSnackBar();
+        },
+      ),
+      behavior: SnackBarBehavior.floating,
+      elevation: 3.0,
+      backgroundColor: Colors.white,
+    ));
   }
 
   void showAddAppointmentDialog(DateTime day) {
@@ -107,6 +136,7 @@ class _CalendarPageState extends State<CalendarPage> {
             child: Opacity(
               opacity: a1.value,
               child: AlertDialog(
+                backgroundColor: CustomColors.cardColor,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.0)),
                 title: Text(Strings.ALERT_TITLE),
@@ -163,7 +193,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: RaisedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             validateAndSave(day);
                           },
                           child: Text('Submit'),
@@ -189,32 +219,27 @@ class _CalendarPageState extends State<CalendarPage> {
       Strings.FIELD_START_TIME: appointment.startTime,
       Strings.FIELD_END_TIME: appointment.endTime,
       Strings.FIELD_APPOINTMENT_DAY: appointment.appointmentDay,
+      Strings.FIELD_USER_ID: appointment.userId
     }).then((_) {
       Navigator.pop(context);
       setState(() {
         _startTimeController.text = '';
         _endTimeController.text = '';
       });
-      Scaffold.of(context).showSnackBar(new SnackBar(
-        content: DefaultTextStyle(
-          child: Text(Strings.APPOINTMENT_SAVE_TOAST_MSG),
-          style: TextStyle(color: Colors.black54),
-        ),
-        behavior: SnackBarBehavior.floating,
-        elevation: 2.0,
-        backgroundColor: Colors.white,
-      ));
+      createSnackbar(Strings.APPOINTMENT_SAVE_TOAST_MSG);
     });
   }
 
-  void validateAndSave(DateTime day) {
+  void validateAndSave(DateTime day) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     final form = _formKey.currentState;
     if (form.validate()) {
       final databaseReference = FirebaseDatabase.instance
           .reference()
           .child(Strings.FIREBASE_APPOINTMENT);
       Appointment appointment = Appointment(null, _startTimeController.text,
-          _endTimeController.text, day.toString());
+          _endTimeController.text, day.toString(), prefs.getString('userID'));
       createRecord(databaseReference, appointment);
     }
   }

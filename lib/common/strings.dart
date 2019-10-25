@@ -15,4 +15,6 @@ class  Strings {
   static final String FIELD_START_TIME = 'startTime';
   static final String FIELD_END_TIME = 'endTime';
   static final String FIELD_APPOINTMENT_DAY = 'appointmentDay';
+  static final String FIELD_USER_ID = 'userID';
+  static final String DATE_NOTE_VALID_FOR_APPOINTMENT = 'Appointment Cannot Be Booked For Selected Date';
 }
