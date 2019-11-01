@@ -1,7 +1,7 @@
 import 'package:bds/common/strings.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-class Appointment {
+class Appointment implements Comparable<Appointment> {
   String _id;
   String _startTime;
   String _endTime;
@@ -35,5 +35,11 @@ class Appointment {
     _endTime = snapshot.value[Strings.FIELD_END_TIME];
     _appointmentDay = snapshot.value[Strings.FIELD_APPOINTMENT_DAY];
     _userId = snapshot.value[Strings.FIELD_USER_ID];
+  }
+
+  @override
+  int compareTo(Appointment appointment) {
+    int order = _startTime.compareTo(appointment.startTime);
+    return order;
   }
 }

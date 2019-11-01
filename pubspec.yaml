@@ -33,6 +33,9 @@ dependencies:
   flutter_facebook_login: ^3.0.0
   curved_navigation_bar: ^0.1.2
   shared_preferences: ^0.4.3
+  calendar_views: ^0.5.2
+  cloud_firestore: ^0.12.9+6
+  firebase_messaging: ^5.0.2
 
 
 

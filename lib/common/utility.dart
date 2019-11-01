@@ -2,7 +2,7 @@ import 'package:bds/common/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class Utility{
+class Utility {
   static String formatTimeOfDay(TimeOfDay tod) {
     final now = new DateTime.now();
     final dt = DateTime(now.year, now.month, now.day, tod.hour, tod.minute);
@@ -15,7 +15,7 @@ class Utility{
     return DateFormat(Strings.TIME_FORMAT).format(date);
   }
 
-  static DateTime convertStringToDateTime(String time) {
+  static DateTime convertTimeStringToDateTime(String time) {
     var convertedTimeFormat = convertTo24HoursFormat(time);
     var timeOfDay = TimeOfDay(
         hour: int.parse(convertedTimeFormat.split(":")[0]),
@@ -23,5 +23,17 @@ class Utility{
 
     return DateTime.now()
         .add(Duration(hours: timeOfDay.hour, minutes: timeOfDay.minute));
+  }
+
+  static int convertTimeStringToMinutes(String time1, time2) {
+    DateTime d1 = convertTimeStringToDateTime(time1);
+    DateTime d2 = convertTimeStringToDateTime(time2);
+    return d2.difference(d1).inMinutes;
+  }
+
+  static int convertStartTimeToHourForDayView(String time) {
+    var convertedTimeFormat = convertTo24HoursFormat(time);
+    return int.parse(convertedTimeFormat.split(":")[0]) * 60 +
+        int.parse(convertedTimeFormat.split(":")[1]);
   }
 }

@@ -26,7 +26,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   TextEditingController _emailController;
   TextEditingController _passwordController;
 
-  final GlobalKey<ScaffoldState> scaffoldKey = new GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldState> _authScaffoldKey =
+      new GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -46,11 +47,11 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     AuthResult result = await _auth
         .createUserWithEmailAndPassword(email: email, password: password)
         .catchError((e) {
-      scaffoldKey.currentState.showSnackBar(new SnackBar(
+      _authScaffoldKey.currentState.showSnackBar(new SnackBar(
         action: SnackBarAction(
           label: 'Close',
           onPressed: () {
-            scaffoldKey.currentState.hideCurrentSnackBar();
+            _authScaffoldKey.currentState.hideCurrentSnackBar();
           },
         ),
         content: DefaultTextStyle(
@@ -61,24 +62,28 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
                   data: IconThemeData(color: Colors.deepOrange),
                   child: Icon(Icons.error),
                 ),
-                padding: EdgeInsets.only(right: 4.0),
+                padding: EdgeInsets.only(right: 2.0),
               ),
-              Text(e.message.toString())
+              Text(e.message.toString()),
             ],
           ),
-          style: TextStyle(color: Colors.deepOrange),
+          style: TextStyle(color: Colors.deepOrange, fontSize: 11),
         ),
         behavior: SnackBarBehavior.floating,
         elevation: 2.0,
         backgroundColor: Colors.white,
       ));
     });
+    if (null != result.user) {
+      await setCurrentUserFromSharedPreference(result);
+    }
   }
 
   void signIn(String email, String password) async {
     AuthResult result = await _auth.signInWithEmailAndPassword(
         email: email, password: password);
     if (null != result.user) {
+      await setCurrentUserFromSharedPreference(result);
       Navigator.pushNamed(context, '/home');
     }
   }
@@ -94,9 +99,16 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
 
       var user = await FirebaseAuth.instance.signInWithCredential(credential);
       if (null != user) {
+        await setCurrentUserFromSharedPreference(user);
         Navigator.pushNamed(context, '/home');
       }
     }
+  }
+
+  Future setCurrentUserFromSharedPreference(AuthResult result) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('userID', result.user.uid);
+    Navigator.pushNamed(context, '/home');
   }
 
   void signInWithGoogle() async {
@@ -273,7 +285,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      key: scaffoldKey,
+      key: _authScaffoldKey,
       body: Center(
         child: ListView(
           shrinkWrap: true,
