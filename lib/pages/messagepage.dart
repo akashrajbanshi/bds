@@ -15,6 +15,12 @@ class MessagePage extends StatefulWidget {
 class _MessagePageState extends State<MessagePage> {
 
 
+
+  final Firestore _firestore = Firestore.instance;
+
+  TextEditingController messageController = TextEditingController();
+  ScrollController scrollController = ScrollController();
+
   String currentUser;
 
   _MessagePageState() {
@@ -28,10 +34,7 @@ class _MessagePageState extends State<MessagePage> {
     return sp.getString("userID");
   }
 
-  final Firestore _firestore = Firestore.instance;
 
-  TextEditingController messageController = TextEditingController();
-  ScrollController scrollController = ScrollController();
 
   Future<void> callback() async {
     if (messageController.text.length > 0) {
@@ -43,6 +46,8 @@ class _MessagePageState extends State<MessagePage> {
           curve: Curves.easeOut, duration: Duration(milliseconds: 300));
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

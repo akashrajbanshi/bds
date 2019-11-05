@@ -153,6 +153,35 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
     ));
   }
 
+  void createSnackbarSuccess(String message) {
+    _eventCalendarScaffoldKey.currentState.showSnackBar(new SnackBar(
+      content: DefaultTextStyle(
+        child: Row(
+          children: <Widget>[
+            Padding(
+              child: IconTheme(
+                data: IconThemeData(color: Colors.green),
+                child: Icon(Icons.check_circle),
+              ),
+              padding: EdgeInsets.only(right: 2.0),
+            ),
+            Text(message),
+          ],
+        ),
+        style: TextStyle(color: Colors.black, fontSize: 12),
+      ),
+      action: SnackBarAction(
+        label: 'Close',
+        onPressed: () {
+          _eventCalendarScaffoldKey.currentState.hideCurrentSnackBar();
+        },
+      ),
+      behavior: SnackBarBehavior.floating,
+      elevation: 3.0,
+      backgroundColor: Colors.white,
+    ));
+  }
+
   void showAddAppointmentDialog(DateTime day) {
     showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
@@ -255,7 +284,7 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
         _startTimeController.text = '';
         _endTimeController.text = '';
       });
-      createSnackbar(Strings.APPOINTMENT_SAVE_TOAST_MSG);
+      createSnackbarSuccess(Strings.APPOINTMENT_SAVE_TOAST_MSG);
       setState(() {
         filterAppointment(appointment.appointmentDay);
       });

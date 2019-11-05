@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:bds/common/customcolors.dart';
 import 'package:bds/common/strings.dart';
 import 'package:bds/pages/calendarpage.dart';
@@ -18,8 +16,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final FirebaseMessaging _fcm = FirebaseMessaging();
-  final Firestore _firestore = Firestore.instance;
+
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   int _currentIndex = 0;
 
@@ -65,27 +67,5 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _currentIndex = index;
     });
-  }
-
-  _saveDeviceToken() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-
-    // Get the token for this device
-    String fcmToken = await _fcm.getToken();
-
-    // Save it to Firestore
-    if (fcmToken != null) {
-      var tokens = _firestore
-          .collection('users')
-          .document(sp.getString("userID"))
-          .collection('tokens')
-          .document(fcmToken);
-
-      await tokens.setData({
-        'token': fcmToken,
-        'createdAt': FieldValue.serverTimestamp(), // optional
-        'platform': Platform // optional
-      });
-    }
   }
 }

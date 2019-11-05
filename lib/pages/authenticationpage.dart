@@ -6,6 +6,8 @@ import 'package:bds/common/customcolors.dart';
 import 'package:bds/common/customicon.dart';
 import 'package:bds/common/socialicon.dart';
 import 'package:bds/common/styles.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = new GoogleSignIn();
   final FacebookLogin _facebookSignIn = new FacebookLogin();
+  final FirebaseMessaging _fcm = FirebaseMessaging();
+  final Firestore _firestore = Firestore.instance;
 
   TextEditingController _emailController;
   TextEditingController _passwordController;
@@ -108,7 +112,29 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   Future setCurrentUserFromSharedPreference(AuthResult result) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('userID', result.user.uid);
+    _saveDeviceToken(prefs);
     Navigator.pushNamed(context, '/home');
+  }
+
+  _saveDeviceToken(SharedPreferences prefs) async {
+    // Get the token for this device
+    String fcmToken = await _fcm.getToken();
+
+    // Save it to Firestore
+    if (fcmToken != null) {
+      var tokens = _firestore
+          .collection('users')
+          .document(prefs.getString("userID"))
+          .collection('tokens')
+          .document(fcmToken);
+
+      prefs.setString('tokenID', fcmToken);
+
+      await tokens.setData({
+        'token': fcmToken,
+        'createdAt': FieldValue.serverTimestamp(), // optional
+      }).whenComplete(() => prefs.setString('tokenID', fcmToken));
+    }
   }
 
   void signInWithGoogle() async {
