@@ -112,11 +112,11 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   Future setCurrentUserFromSharedPreference(AuthResult result) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('userID', result.user.uid);
-    _saveDeviceToken(prefs);
+    _saveDeviceToken(prefs,result);
     Navigator.pushNamed(context, '/home');
   }
 
-  _saveDeviceToken(SharedPreferences prefs) async {
+  _saveDeviceToken(SharedPreferences prefs, AuthResult result) async {
     // Get the token for this device
     String fcmToken = await _fcm.getToken();
 
@@ -124,14 +124,12 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     if (fcmToken != null) {
       var tokens = _firestore
           .collection('users')
-          .document(prefs.getString("userID"))
-          .collection('tokens')
-          .document(fcmToken);
+          .document(result.user.uid);
 
       prefs.setString('tokenID', fcmToken);
 
       await tokens.setData({
-        'token': fcmToken,
+        'tokenID': fcmToken,
         'createdAt': FieldValue.serverTimestamp(), // optional
       }).whenComplete(() => prefs.setString('tokenID', fcmToken));
     }
@@ -199,8 +197,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       decoration: InputDecoration(
         hintText: 'Password',
         contentPadding: EdgeInsets.fromLTRB(30.0, 20.0, 30.0, 20.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24.0)),
-      ),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24.0)),
+    ),
     );
 
     final loginButton = Padding(

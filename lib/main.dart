@@ -1,6 +1,4 @@
-import 'package:bds/arguments/eventdaycalendararguments.dart';
 import 'package:bds/pages/authenticationpage.dart';
-import 'package:bds/pages/eventdaycalendarpage.dart';
 import 'package:bds/pages/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';

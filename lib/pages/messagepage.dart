@@ -13,9 +13,6 @@ class MessagePage extends StatefulWidget {
 }
 
 class _MessagePageState extends State<MessagePage> {
-
-
-
   final Firestore _firestore = Firestore.instance;
 
   TextEditingController messageController = TextEditingController();
@@ -34,20 +31,18 @@ class _MessagePageState extends State<MessagePage> {
     return sp.getString("userID");
   }
 
-
-
   Future<void> callback() async {
     if (messageController.text.length > 0) {
-      await _firestore
-          .collection('messages')
-          .add({'text': messageController.text, 'from': currentUser});
+      await _firestore.collection('messages').add({
+        'text': messageController.text,
+        'from': currentUser,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
       messageController.clear();
       scrollController.animateTo(scrollController.position.maxScrollExtent,
           curve: Curves.easeOut, duration: Duration(milliseconds: 300));
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -60,12 +55,13 @@ class _MessagePageState extends State<MessagePage> {
             Container(
               child: Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream:
-                      _firestore.collection(Strings.FIREBASE_MESSAGE).snapshots(),
+                  stream: _firestore
+                      .collection(Strings.FIREBASE_MESSAGE)
+                      .orderBy("createdAt",descending: false)
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData)
                       return Center(child: CircularProgressIndicator());
-
 
                     List<DocumentSnapshot> docs = snapshot.data.documents;
 
@@ -99,8 +95,9 @@ class _MessagePageState extends State<MessagePage> {
                                 color: CustomColors.appBarColor, width: 3.0),
                             borderRadius: BorderRadius.circular(24.0),
                           ),
-                          enabledBorder:  OutlineInputBorder(
-                            borderSide: const BorderSide(color: CustomColors.appBarColor, width: 2.0),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: CustomColors.appBarColor, width: 2.0),
                             borderRadius: BorderRadius.circular(24.0),
                           ),
                           hintText: 'Enter your message',
