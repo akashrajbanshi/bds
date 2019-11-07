@@ -6,6 +6,8 @@ class  Strings {
   static final String START_TIME_HINT_TEXT = 'Enter Start Time';
   static final String END_TIME_HINT_TEXT = 'Enter End Time';
   static final String APPOINTMENT_SAVE_TOAST_MSG = 'Appointment Has Been Scheduled';
+  static final String APPOINTMENT_UPDATE_TOAST_MSG = 'Appointment Has Been Updated';
+  static final String APPOINTMENT_DELETE_TOAST_MSG = 'Appointment Has Been Deleted';
   static final String VALIDATE_EMPTY_START_TIME = 'Please Enter Start Time';
   static final String VALIDATE_EMPTY_END_TIME = 'Please Enter End Time';
   static final String VALIDATE_START_TIME_AFTER_END_TIME = 'Start Time Must Be Before End Time';

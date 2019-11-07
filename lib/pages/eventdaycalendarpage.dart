@@ -12,6 +12,7 @@ import 'package:calendar_views/calendar_views.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EventDayCalendarPage extends StatefulWidget {
@@ -25,7 +26,7 @@ class EventDayCalendarPage extends StatefulWidget {
 
 class EventDayCalendarPageState extends State<EventDayCalendarPage> {
   final GlobalKey<ScaffoldState> _eventCalendarScaffoldKey =
-  new GlobalKey<ScaffoldState>();
+      new GlobalKey<ScaffoldState>();
   final EventDayCalendarArguments arguments;
 
   EventDayCalendarPageState(this.arguments);
@@ -37,9 +38,9 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
   List<Appointment> _eventList = List<Appointment>();
 
   DateTime selectedDate;
-  StreamSubscription<Event> _onNoteAddedSubscription;
-  final notesReference =
-  FirebaseDatabase.instance.reference().child(Strings.FIREBASE_APPOINTMENT);
+  StreamSubscription<Event> _onAppointmentAddedSubscription;
+  final appointmentsReference =
+      FirebaseDatabase.instance.reference().child(Strings.FIREBASE_APPOINTMENT);
 
   List<DayViewEvent> _dayViewEventList = List<DayViewEvent>();
 
@@ -49,8 +50,11 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
   void initState() {
     super.initState();
     appointments = new List();
-    _onNoteAddedSubscription =
-        notesReference.onChildAdded.listen(_onAppointmentAdded);
+    _onAppointmentAddedSubscription =
+        appointmentsReference.onChildAdded.listen(_onAppointmentAdded);
+
+    _onAppointmentAddedSubscription =
+        appointmentsReference.onChildChanged.listen(_onAppointmentUpdated);
 
     _startTimeController = TextEditingController();
     _endTimeController = TextEditingController();
@@ -60,13 +64,25 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
   void dispose() {
     _startTimeController.dispose();
     _endTimeController.dispose();
-    _onNoteAddedSubscription.cancel();
+    _onAppointmentAddedSubscription.cancel();
     super.dispose();
   }
 
   void _onAppointmentAdded(Event event) {
     setState(() {
       appointments.add(new Appointment.fromSnapshot(event.snapshot));
+      _selectDate();
+    });
+  }
+
+  void _onAppointmentUpdated(Event event) {
+    var oldEntry = appointments.singleWhere((entry) {
+      return entry.id == event.snapshot.key;
+    });
+
+    setState(() {
+      appointments[appointments.indexOf(oldEntry)] =
+          Appointment.fromSnapshot(event.snapshot);
       _selectDate();
     });
   }
@@ -115,7 +131,7 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
         _eventList.add(event);
         _dayViewEventList.add(DayViewEvent(
             startMinuteOfDay:
-            Utility.convertStartTimeToHourForDayView(event.startTime),
+                Utility.convertStartTimeToHourForDayView(event.startTime),
             duration: Utility.convertTimeStringToMinutes(
                 event.startTime, event.endTime),
             title: ''));
@@ -182,7 +198,13 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
     ));
   }
 
-  void showAddAppointmentDialog(DateTime day) {
+  void showAddAppointmentDialog(Appointment appointment) {
+    if (null != appointment.startTime && appointment.startTime.isNotEmpty) {
+      setState(() {
+        _startTimeController.text = appointment.startTime;
+        _endTimeController.text = appointment.endTime;
+      });
+    }
     showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
         transitionBuilder: (context, a1, a2, widget) {
@@ -208,6 +230,12 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
                           decoration: InputDecoration(
                               hintText: Strings.START_TIME_HINT_TEXT),
                           onTap: () {
+                            if (null != _startTimeController.text &&
+                                _startTimeController.text.isNotEmpty)
+                              _selectedStartTime =
+                                  Utility.convertTimeStringToTimeOfDay(
+                                      _startTimeController.text);
+
                             _selectStartTime(context);
                             FocusScope.of(context).requestFocus(FocusNode());
                           },
@@ -231,6 +259,12 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
                           decoration: InputDecoration(
                               hintText: Strings.END_TIME_HINT_TEXT),
                           onTap: () {
+                            if (null != _endTimeController.text &&
+                                _endTimeController.text.isNotEmpty)
+                              _selectedEndTime =
+                                  Utility.convertTimeStringToTimeOfDay(
+                                      _endTimeController.text);
+
                             _selectEndTime(context);
                             FocusScope.of(context).requestFocus(FocusNode());
                           },
@@ -252,7 +286,7 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: RaisedButton(
                           onPressed: () async {
-                            validateAndSave(day);
+                            validateAndSave(appointment);
                           },
                           child: Text('Submit'),
                         ),
@@ -271,27 +305,42 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
         pageBuilder: (context, animation1, animation2) {});
   }
 
-  void createRecord(DatabaseReference databaseReference,
-      Appointment appointment) {
+  void createRecord(
+      DatabaseReference databaseReference, Appointment appointment) {
     databaseReference.push().set({
       Strings.FIELD_START_TIME: appointment.startTime,
       Strings.FIELD_END_TIME: appointment.endTime,
       Strings.FIELD_APPOINTMENT_DAY: appointment.appointmentDay,
       Strings.FIELD_USER_ID: appointment.userId
-    }).then((_) {
-      Navigator.pop(context);
-      setState(() {
-        _startTimeController.text = '';
-        _endTimeController.text = '';
-      });
-      createSnackbarSuccess(Strings.APPOINTMENT_SAVE_TOAST_MSG);
-      setState(() {
-        filterAppointment(appointment.appointmentDay);
-      });
+    });
+    Navigator.pop(context);
+    setState(() {
+      _startTimeController.text = '';
+      _endTimeController.text = '';
+    });
+    createSnackbarSuccess(Strings.APPOINTMENT_SAVE_TOAST_MSG);
+  }
+
+  void updateRecord(
+      DatabaseReference databaseReference, Appointment appointment) {
+    databaseReference
+        .child(appointment.id)
+        .child(Strings.FIELD_START_TIME)
+        .set(_startTimeController.text);
+    databaseReference
+        .child(appointment.id)
+        .child(Strings.FIELD_END_TIME)
+        .set(_endTimeController.text);
+
+    Navigator.pop(context);
+    createSnackbarSuccess(Strings.APPOINTMENT_UPDATE_TOAST_MSG);
+    setState(() {
+      _startTimeController.text = '';
+      _endTimeController.text = '';
     });
   }
 
-  void validateAndSave(DateTime day) async {
+  void validateAndSave(Appointment appointment) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     final form = _formKey.currentState;
@@ -299,35 +348,43 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
       final databaseReference = FirebaseDatabase.instance
           .reference()
           .child(Strings.FIREBASE_APPOINTMENT);
-      Appointment appointment = Appointment(null, _startTimeController.text,
-          _endTimeController.text, day.toString(), prefs.getString('userID'));
-      createRecord(databaseReference, appointment);
+      if (null == appointment.id)
+        createRecord(
+            databaseReference,
+            Appointment(
+                null,
+                _startTimeController.text,
+                _endTimeController.text,
+                appointment.appointmentDay,
+                prefs.getString('userID')));
+      else
+        updateRecord(databaseReference, appointment);
     }
   }
 
   List<StartDurationItem> _getEventsOfDay(DateTime day) {
     return _dayViewEventList
         .map(
-          (event) =>
-      new StartDurationItem(
-        startMinuteOfDay: event.startMinuteOfDay,
-        duration: event.duration,
-        builder: (context, itemPosition, itemSize) =>
-            _eventBuilder(
+          (event) => new StartDurationItem(
+            startMinuteOfDay: event.startMinuteOfDay,
+            duration: event.duration,
+            builder: (context, itemPosition, itemSize) => _eventBuilder(
               context,
               itemPosition,
               itemSize,
               event,
             ),
-      ),
-    )
+          ),
+        )
         .toList();
   }
 
-  Positioned _eventBuilder(BuildContext context,
-      ItemPosition itemPosition,
-      ItemSize itemSize,
-      DayViewEvent event,) {
+  Positioned _eventBuilder(
+    BuildContext context,
+    ItemPosition itemPosition,
+    ItemSize itemSize,
+    DayViewEvent event,
+  ) {
     return new Positioned(
       top: itemPosition.top,
       left: itemPosition.left,
@@ -364,10 +421,12 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
         "${(minuteOfDay % 60).toString().padLeft(2, "0")}";
   }
 
-  Positioned _generatedTimeIndicatorBuilder(BuildContext context,
-      ItemPosition itemPosition,
-      ItemSize itemSize,
-      int minuteOfDay,) {
+  Positioned _generatedTimeIndicatorBuilder(
+    BuildContext context,
+    ItemPosition itemPosition,
+    ItemSize itemSize,
+    int minuteOfDay,
+  ) {
     return new Positioned(
       top: itemPosition.top,
       left: itemPosition.left,
@@ -381,10 +440,12 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
     );
   }
 
-  Positioned _generatedSupportLineBuilder(BuildContext context,
-      ItemPosition itemPosition,
-      double itemWidth,
-      int minuteOfDay,) {
+  Positioned _generatedSupportLineBuilder(
+    BuildContext context,
+    ItemPosition itemPosition,
+    double itemWidth,
+    int minuteOfDay,
+  ) {
     return new Positioned(
       top: itemPosition.top,
       left: itemPosition.left,
@@ -396,10 +457,12 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
     );
   }
 
-  Positioned _generatedDaySeparatorBuilder(BuildContext context,
-      ItemPosition itemPosition,
-      ItemSize itemSize,
-      int daySeparatorNumber,) {
+  Positioned _generatedDaySeparatorBuilder(
+    BuildContext context,
+    ItemPosition itemPosition,
+    ItemSize itemSize,
+    int daySeparatorNumber,
+  ) {
     return new Positioned(
       top: itemPosition.top,
       left: itemPosition.left,
@@ -450,10 +513,34 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
                               if (_eventList.length > 0) {
                                 return Card(
                                   color: CustomColors.cardColor,
-                                  child: ListTile(
-                                    title: Text(_eventList[index].startTime +
-                                        " - " +
-                                        _eventList[index].endTime),
+                                  child: Slidable(
+                                    actionExtentRatio: 0.25,
+                                    actionPane: SlidableScrollActionPane(),
+                                    child: ListTile(
+                                      title: Text(_eventList[index].startTime +
+                                          " - " +
+                                          _eventList[index].endTime),
+                                    ),
+                                    secondaryActions: <Widget>[
+                                      IconSlideAction(
+                                        caption: 'Edit',
+                                        color: Colors.green,
+                                        icon: Icons.mode_edit,
+                                        onTap: () {
+                                          showAddAppointmentDialog(
+                                              _eventList[index]);
+                                        },
+                                      ),
+                                      IconSlideAction(
+                                        caption: 'Delete',
+                                        color: Colors.red,
+                                        icon: Icons.delete,
+                                        onTap: () {
+                                          showDeleteAppointmentDialog(
+                                              _eventList[index].id, index);
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 );
                               } else {
@@ -488,16 +575,16 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
                                       new TimeIndicationComponent
                                           .intervalGenerated(
                                         generatedTimeIndicatorBuilder:
-                                        _generatedTimeIndicatorBuilder,
+                                            _generatedTimeIndicatorBuilder,
                                       ),
                                       new SupportLineComponent
                                           .intervalGenerated(
                                         generatedSupportLineBuilder:
-                                        _generatedSupportLineBuilder,
+                                            _generatedSupportLineBuilder,
                                       ),
                                       new DaySeparationComponent(
                                         generatedDaySeparatorBuilder:
-                                        _generatedDaySeparatorBuilder,
+                                            _generatedDaySeparatorBuilder,
                                       ),
                                       new EventViewComponent(
                                         getEventsOfDay: _getEventsOfDay,
@@ -520,7 +607,8 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
             var selectedDay = DateTime(
                 arguments.date.year, arguments.date.month, arguments.date.day);
             if (selectedDay.isAfter(todayDate) || selectedDay == todayDate) {
-              showAddAppointmentDialog(arguments.date);
+              showAddAppointmentDialog(Appointment(null, null, null,
+                  Utility.formatDateTime(arguments.date), null));
             } else {
               createSnackbar(Strings.DATE_NOTE_VALID_FOR_APPOINTMENT);
             }
@@ -533,8 +621,51 @@ class EventDayCalendarPageState extends State<EventDayCalendarPage> {
         ));
   }
 
-  Future<void> _refreshEvents() async
-  {
+  Future<void> _refreshEvents() async {}
 
+  void showDeleteAppointmentDialog(String id, int index) {
+    showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: AlertDialog(
+                backgroundColor: CustomColors.cardColor,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0)),
+                title: Text("Delete Appointment"),
+                content: new Text("Are you sure want to Delete?"),
+                actions: <Widget>[
+                  FlatButton(
+                    child: new Text("Yes"),
+                    onPressed: () {
+                      appointmentsReference.child(id).remove();
+                      setState(() {
+                        appointments.removeAt(index);
+                        _selectDate();
+                      });
+                      Navigator.of(context).pop();
+                      createSnackbarSuccess(Strings.APPOINTMENT_DELETE_TOAST_MSG);
+                    },
+                  ),
+                  FlatButton(
+                    child: new Text("No"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: true,
+        barrierLabel: '',
+        context: context,
+        pageBuilder: (context, animation1, animation2) {});
   }
 }
