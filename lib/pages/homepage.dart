@@ -2,14 +2,13 @@ import 'package:bds/common/customcolors.dart';
 import 'package:bds/common/strings.dart';
 import 'package:bds/pages/calendarpage.dart';
 import 'package:bds/pages/messagepage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bds/pages/profilepage.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -68,7 +67,7 @@ class _HomePageState extends State<HomePage> {
 
   int _currentIndex = 0;
 
-  final List<Widget> screens = [CalendarPage(), MessagePage()];
+  final List<Widget> screens = [CalendarPage(), MessagePage(), ProfilePage()];
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +98,8 @@ class _HomePageState extends State<HomePage> {
             animationDuration: Duration(milliseconds: 300),
             items: [
               Icon(Icons.calendar_today, size: 28),
-              Icon(Icons.message, size: 28)
+              Icon(Icons.message, size: 28),
+              Icon(Icons.account_box, size: 28)
             ],
           ),
         ),

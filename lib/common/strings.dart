@@ -19,8 +19,6 @@ class  Strings {
   static final String FIELD_APPOINTMENT_DAY = 'appointmentDay';
   static final String FIELD_USER_ID = 'userID';
   static final String DATE_NOTE_VALID_FOR_APPOINTMENT = 'Appointment Cannot Be Booked For Selected Date';
-
   static final String DAY_VIEW_APP_BAR = 'Day View';
-
   static final String FIREBASE_MESSAGE = 'messages';
 }

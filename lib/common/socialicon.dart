@@ -13,6 +13,7 @@ class SocialIcon extends StatelessWidget {
         width: 40.0,
         height: 40.0,
         child: RawMaterialButton(
+          onPressed: () {},
           shape: CircleBorder(),
           child: Icon(iconData, color: Colors.white),
         ),

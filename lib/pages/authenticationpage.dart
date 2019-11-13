@@ -101,34 +101,49 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       AuthCredential credential =
           FacebookAuthProvider.getCredential(accessToken: myToken.token);
 
-      var user = await FirebaseAuth.instance.signInWithCredential(credential);
-      if (null != user) {
-        await setCurrentUserFromSharedPreference(user);
+      var authResult =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      if (null != authResult) {
+        await setCurrentUserFromSharedPreference(authResult);
         Navigator.pushNamed(context, '/home');
       }
     }
   }
 
   Future setCurrentUserFromSharedPreference(AuthResult result) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('userID', result.user.uid);
-    _saveDeviceToken(prefs,result);
+    _saveDeviceToken(result);
     Navigator.pushNamed(context, '/home');
   }
 
-  _saveDeviceToken(SharedPreferences prefs, AuthResult result) async {
+  _saveDeviceToken(AuthResult result) async {
+    await updateSPAndFS(result);
+  }
+
+  Future updateSPAndFS(AuthResult result) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String username = result.user.displayName;
+    String email = result.user.email;
+    String mobile = result.user.phoneNumber;
+    String photoUrl = result.user.photoUrl;
+
+    prefs.setString('userID', result.user.uid);
+    prefs.setString('username', username);
+    prefs.setString('email', email);
+    prefs.setString('mobile', mobile);
+    prefs.setString('photoUrl', photoUrl);
+
     // Get the token for this device
     String fcmToken = await _fcm.getToken();
 
     // Save it to Firestore
     if (fcmToken != null) {
-      var tokens = _firestore
-          .collection('users')
-          .document(result.user.uid);
-
-      prefs.setString('tokenID', fcmToken);
+      var tokens = _firestore.collection('users').document(result.user.uid);
 
       await tokens.setData({
+        'username': username,
+        'email': email,
+        'mobile': mobile,
+        'photoUrl': photoUrl,
         'tokenID': fcmToken,
         'createdAt': FieldValue.serverTimestamp(), // optional
       }).whenComplete(() => prefs.setString('tokenID', fcmToken));
@@ -146,10 +161,9 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       idToken: googleSignInAuthentication.idToken,
     );
     AuthResult authResult = await _auth.signInWithCredential(credential);
-    FirebaseUser user = authResult.user;
-    if (null != user) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString('userID', user.uid);
+
+    if (null != authResult) {
+      updateSPAndFS(authResult);
       Navigator.pushNamed(context, '/home');
     }
   }
@@ -197,8 +211,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
       decoration: InputDecoration(
         hintText: 'Password',
         contentPadding: EdgeInsets.fromLTRB(30.0, 20.0, 30.0, 20.0),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24.0)),
-    ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24.0)),
+      ),
     );
 
     final loginButton = Padding(
