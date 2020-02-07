@@ -11,7 +11,10 @@ Future<void> main() async {
     title: 'BDS',
     initialRoute: '/',
     routes: {
-      '/': (context) => (null != userId) ? HomePage() : AuthenticationPage(),
+      '/': (context) => (null == userId)
+          ? AuthenticationPage()
+//          : AuthenticationPage(null, null, null, null, null),
+          : HomePage(),
       // Login Page
       '/home': (context) => HomePage(),
       // Home Page

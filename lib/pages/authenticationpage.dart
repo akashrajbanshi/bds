@@ -16,22 +16,49 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthenticationPage extends StatefulWidget {
+  /*FirebaseAuth _auth = FirebaseAuth.instance;
+  GoogleSignIn _googleSignIn = new GoogleSignIn();
+  FacebookLogin _facebookSignIn = new FacebookLogin();
+  FirebaseMessaging _fcm = FirebaseMessaging();
+  Firestore _firestore = Firestore.instance;
+
+  AuthenticationPage(
+      FirebaseAuth auth,
+      GoogleSignIn googleSignIn,
+      FacebookLogin facebookSignIn,
+      FirebaseMessaging fcm,
+      Firestore firestore) {
+    this._auth = auth;
+    this._googleSignIn = googleSignIn;
+    this._facebookSignIn = facebookSignIn;
+    this._fcm = fcm;
+    this._firestore = firestore;
+  }
+
+
+  @override
+  createState() => new _AuthenticationPageState(
+      _auth, _googleSignIn, _facebookSignIn, _fcm, _firestore);*/
+
   @override
   createState() => new _AuthenticationPageState();
 }
 
 class _AuthenticationPageState extends State<AuthenticationPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = new GoogleSignIn();
-  final FacebookLogin _facebookSignIn = new FacebookLogin();
-  final FirebaseMessaging _fcm = FirebaseMessaging();
-  final Firestore _firestore = Firestore.instance;
+  FirebaseAuth _auth = FirebaseAuth.instance;
+  GoogleSignIn _googleSignIn = new GoogleSignIn();
+  FacebookLogin _facebookSignIn = new FacebookLogin();
+  FirebaseMessaging _fcm = FirebaseMessaging();
+  Firestore _firestore = Firestore.instance;
 
   TextEditingController _emailController;
   TextEditingController _passwordController;
 
   final GlobalKey<ScaffoldState> _authScaffoldKey =
       new GlobalKey<ScaffoldState>();
+
+//  _AuthenticationPageState(this._auth, this._googleSignIn, this._facebookSignIn,
+//      this._fcm, this._firestore);
 
   @override
   void initState() {
@@ -192,6 +219,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     );
 
     final email = TextField(
+      key: Key('email'),
       keyboardType: TextInputType.emailAddress,
       autofocus: false,
       controller: _emailController,
@@ -205,6 +233,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
 
     final password = TextField(
       autofocus: false,
+      key: Key('password'),
       maxLines: 1,
       controller: _passwordController,
       obscureText: true,
@@ -217,6 +246,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
 
     final loginButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 5.0),
+      key: Key('loginButton'),
       child: RaisedButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -250,6 +280,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     );
 
     final forgotLabel = FlatButton(
+      key: Key('forgotLabel'),
       child: Text(
         'Forgot password?',
         style: TextStyle(color: Colors.black54),
@@ -278,6 +309,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     final googleButton = Padding(
       padding: EdgeInsets.only(top: 20.0),
       child: RaisedButton(
+        key: Key('googleButton'),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -301,6 +333,7 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
     final facebookButton = Padding(
       padding: EdgeInsets.only(top: 10.0),
       child: RaisedButton(
+        key: Key('facebookButton'),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
